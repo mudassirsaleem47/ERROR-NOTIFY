@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Error Notify Settings</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Error Monitor</h1>
+        <button id="clearBtn">Clear</button>
+    </div>
+    
+    <div class="settings-bar">
+        <label class="switch">
+            <input type="checkbox" id="autoHideCheck" checked>
+            <span class="slider"></span>
+        </label>
+        <span>Auto Hide Notifications</span>
+    </div>
+
+    <div id="errorList" class="error-list">
+        <div class="empty-state">No errors.</div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
