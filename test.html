@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Error Notify - Test Page</title>
+    <script>
+        // Fires before <body> exists, to test early-load toasts
+        console.error('Early error: logged from <head> before body exists');
+    </script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 90px 24px 40px;
+            background: #202124;
+            color: #e8eaed;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        h1 { font-size: 20px; font-weight: 500; margin: 0 0 4px; }
+        p.hint { color: #9aa0a6; font-size: 13px; margin: 0 0 24px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+        .group {
+            background: #292a2d;
+            border: 1px solid #3c4043;
+            border-radius: 6px;
+            padding: 14px 16px;
+        }
+        .group h2 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: #9aa0a6;
+            margin: 0 0 10px;
+            font-weight: 600;
+        }
+        .group button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: transparent;
+            border: 1px solid #5f6368;
+            color: #8ab4f8;
+            padding: 7px 10px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            font: 500 12px 'Segoe UI', Tahoma, sans-serif;
+        }
+        .group button:hover { background: #35363a; }
+        .group button small { display: block; color: #9aa0a6; font-weight: 400; margin-top: 2px; }
+
+        #fakeHeader {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 64px;
+            background: #394457;
+            color: #e8eaed;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            font-size: 14px;
+            z-index: 999999;
+            box-shadow: 0 2px 8px rgba(0,0,0,.4);
+        }
+        #fakeModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.7);
+            z-index: 2147483000;
+            align-items: center;
+            justify-content: center;
+        }
+        #fakeModal.open { display: flex; }
+        #fakeModal .box {
+            background: #292a2d;
+            border: 1px solid #3c4043;
+            border-radius: 8px;
+            padding: 24px;
+            width: 360px;
+        }
+
+        #log {
+            margin-top: 24px;
+            background: #171717;
+            border: 1px solid #3c4043;
+            border-radius: 6px;
+            padding: 12px;
+            font: 11px/1.6 monospace;
+            color: #9aa0a6;
+            max-height: 200px;
+            overflow: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+    <style id="hostileCss" media="not all">
+        /* Aggressive page CSS - toasts must NOT be affected (Shadow DOM) */
+        div, span, button {
+            font-family: 'Comic Sans MS', cursive !important;
+            color: lime !important;
+            background: magenta !important;
+            border-radius: 0 !important;
+            font-size: 20px !important;
+        }
+        error-notify-root { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="fakeHeader">Fixed header (z-index: 999999) - toast iske upar dikhna chahiye</div>
+
+    <h1>Error Notify - Test Page</h1>
+    <p class="hint">Har button aik alag qism ka error chalata hai. Toasts top-right par aane chahiye, aur extension icon par badge count badhna chahiye.</p>
+
+    <div class="grid">
+        <div class="group">
+            <h2>Console</h2>
+            <button data-test="simple">console.error (string)<small>Simple text message</small></button>
+            <button data-test="format">console.error with %s<small>React-style format string</small></button>
+            <button data-test="errorObj">console.error(new Error())<small>Error object + stack trace</small></button>
+            <button data-test="object">console.error with object<small>Nested + circular object</small></button>
+            <button data-test="warn">console.warn<small>Sirf "Capture warnings" ON ho to dikhega</small></button>
+        </div>
+
+        <div class="group">
+            <h2>Uncaught / Promise</h2>
+            <button data-test="uncaught">Uncaught TypeError<small>undefined ki property read karna</small></button>
+            <button data-test="throwCustom">throw new Error()<small>Custom uncaught error</small></button>
+            <button data-test="rejectError">Unhandled rejection (Error)<small>Promise.reject(new Error)</small></button>
+            <button data-test="rejectString">Unhandled rejection (string)<small>Promise.reject('...')</small></button>
+            <button data-test="fetchFail">Failed fetch<small>Non-existent domain par fetch</small></button>
+        </div>
+
+        <div class="group">
+            <h2>Resource</h2>
+            <button data-test="badImg">Broken image<small>&lt;img&gt; with missing src</small></button>
+            <button data-test="badScript">Broken script<small>&lt;script&gt; with missing src</small></button>
+            <button data-test="badCss">Broken stylesheet<small>&lt;link&gt; with missing href</small></button>
+        </div>
+
+        <div class="group">
+            <h2>Stress</h2>
+            <button data-test="duplicate">Same error x5<small>Aik toast par ×5 count aana chahiye</small></button>
+            <button data-test="flood">20 alag errors<small>Screen par max 4 toasts</small></button>
+            <button data-test="loop">Error loop (3 sec)<small>Har 50ms same error, count badhta rahe</small></button>
+            <button data-test="long">Bohat lamba message<small>Toast mein scroll aana chahiye</small></button>
+        </div>
+
+        <div class="group">
+            <h2>Safety</h2>
+            <button data-test="xss">XSS message<small>HTML text ki tarah dikhe, alert NA aaye</small></button>
+            <button data-test="hostile">Toggle hostile page CSS<small>Toast ka design change NAHI hona chahiye</small></button>
+            <button data-test="modal">Open high z-index modal<small>Modal (z: 2147483000) + error</small></button>
+            <button data-test="react">React hydration errors<small>Real React 19 style messages</small></button>
+        </div>
+    </div>
+
+    <div id="log">Test log:</div>
+
+    <div id="fakeModal">
+        <div class="box">
+            <h2 style="margin-top:0;font-size:16px;">Fake Modal</h2>
+            <p style="color:#9aa0a6;font-size:13px;">Iska z-index 2147483000 hai. Toast phir bhi iske upar dikhna chahiye.</p>
+            <button id="closeModal" style="background:transparent;border:1px solid #5f6368;color:#8ab4f8;padding:6px 14px;border-radius:4px;cursor:pointer;">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const logBox = document.getElementById('log');
+        function log(text) {
+            logBox.textContent += `\n[${new Date().toLocaleTimeString()}] ${text}`;
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function loadBroken(tag, attr) {
+            const el = document.createElement(tag);
+            if (tag === 'link') el.rel = 'stylesheet';
+            el[attr] = `missing-file-${Date.now()}.${tag === 'img' ? 'png' : tag === 'script' ? 'js' : 'css'}`;
+            document.body.appendChild(el);
+        }
+
+        const tests = {
+            simple: () => console.error('Something went wrong while saving the form'),
+
+            format: () => console.error(
+                'In HTML, %s cannot be a descendant of <%s>.\nThis will cause a hydration error.%s',
+                '<button>', 'button', '\n\n  <DropdownMenuTrigger>\n    <button>\n>     <button>'
+            ),
+
+            errorObj: () => console.error(new Error('Failed to load user profile')),
+
+            object: () => {
+                const data = { user: { id: 42, name: 'Ali' }, tags: ['a', 'b'], big: 10n };
+                data.self = data;
+                console.error('API response invalid:', data);
+            },
+
+            warn: () => console.warn('Deprecated API used: componentWillMount'),
+
+            uncaught: () => setTimeout(() => {
+                const user = undefined;
+                return user.name;
+            }),
+
+            throwCustom: () => setTimeout(() => { throw new Error('Payment gateway timeout'); }),
+
+            rejectError: () => Promise.reject(new Error('Network request failed')),
+
+            rejectString: () => Promise.reject('Token expired'),
+
+            fetchFail: () => fetch('https://this-domain-does-not-exist-12345.invalid/api'),
+
+            badImg: () => loadBroken('img', 'src'),
+            badScript: () => loadBroken('script', 'src'),
+            badCss: () => loadBroken('link', 'href'),
+
+            duplicate: () => {
+                for (let i = 0; i < 5; i++) console.error('Duplicate error: same message repeated');
+            },
+
+            flood: () => {
+                for (let i = 1; i <= 20; i++) console.error(`Flood error #${i}`);
+            },
+
+            loop: () => {
+                const timer = setInterval(() => console.error('Animation frame failed: canvas is null'), 50);
+                setTimeout(() => clearInterval(timer), 3000);
+            },
+
+            long: () => console.error('Long error: ' + 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(40)),
+
+            xss: () => console.error('<img src=x onerror="alert(\'XSS! Extension is vulnerable\')"><b>bold?</b><script>alert(1)<\/script>'),
+
+            hostile: () => {
+                const style = document.getElementById('hostileCss');
+                const on = style.media === 'not all';
+                style.media = on ? 'all' : 'not all';
+                console.error(`Hostile CSS ${on ? 'ON' : 'OFF'} - toast normal dikhna chahiye`);
+                return on ? 'hostile CSS ON' : 'hostile CSS OFF';
+            },
+
+            modal: () => {
+                document.getElementById('fakeModal').classList.add('open');
+                console.error('Error while modal is open - toast modal ke upar hona chahiye');
+            },
+
+            react: () => {
+                console.error(
+                    'In HTML, %s cannot be a child of <%s>.%s This will cause a hydration error.%s',
+                    '<div>', 'tr', '', '\n\n  <TableRow>\n>   <div className="absolute ...">'
+                );
+                console.error('<%s> cannot contain a nested %s. See this log for the ancestor stack trace.', 'tr', '<div>');
+                console.error(
+                    'React does not recognize the `%s` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `%s` instead.',
+                    'asChild', 'aschild'
+                );
+            }
+        };
+
+        document.querySelectorAll('[data-test]').forEach(button => {
+            button.addEventListener('click', () => {
+                const name = button.dataset.test;
+                const note = tests[name]();
+                log(`${name}${typeof note === 'string' ? ` (${note})` : ''}`);
+            });
+        });
+
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('fakeModal').classList.remove('open');
+        });
+    </script>
+</body>
+</html>

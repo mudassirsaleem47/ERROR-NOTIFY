@@ -1,26 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
     <title>Error Notify Settings</title>
     <link rel="stylesheet" href="popup.css">
 </head>
 <body>
     <div class="header">
-        <h1>Error Monitor</h1>
-        <button id="clearBtn">Clear</button>
-    </div>
-    
-    <div class="settings-bar">
-        <label class="switch">
-            <input type="checkbox" id="autoHideCheck" checked>
-            <span class="slider"></span>
-        </label>
-        <span>Auto Hide Notifications</span>
+        <div class="title">
+            <h1>Error Monitor</h1>
+            <span id="countBadge" class="count-badge">0</span>
+        </div>
+        <div class="header-actions">
+            <button id="copyAllBtn" class="btn" title="Copy all visible errors">Copy all</button>
+            <button id="clearBtn" class="btn" title="Clear all visible errors">Clear</button>
+        </div>
     </div>
 
-    <div id="errorList" class="error-list">
-        <div class="empty-state">No errors.</div>
+    <div class="settings-bar">
+        <label class="setting" title="Page par toast notifications dikhayein">
+            <span class="switch">
+                <input type="checkbox" id="showToastsCheck" checked>
+                <span class="slider"></span>
+            </span>
+            <span>Notifications</span>
+        </label>
+        <label class="setting" title="Toast 5 second baad khud band ho">
+            <span class="switch">
+                <input type="checkbox" id="autoHideCheck" checked>
+                <span class="slider"></span>
+            </span>
+            <span>Auto hide</span>
+        </label>
+        <label class="setting" title="Chhote toasts: 2 lines ka message, click karke poora khulta hai">
+            <span class="switch">
+                <input type="checkbox" id="compactToastsCheck">
+                <span class="slider"></span>
+            </span>
+            <span>Compact toasts</span>
+        </label>
+        <label class="setting" title="Naya error aane par halki awaaz">
+            <span class="switch">
+                <input type="checkbox" id="playSoundCheck">
+                <span class="slider"></span>
+            </span>
+            <span>Sound</span>
+        </label>
+        <label class="setting" title="console.warn bhi capture karein">
+            <span class="switch">
+                <input type="checkbox" id="captureWarningsCheck">
+                <span class="slider"></span>
+            </span>
+            <span>Capture warnings</span>
+        </label>
     </div>
+
+    <div class="toolbar">
+        <div class="scope">
+            <button class="scope-btn active" data-scope="tab">This tab</button>
+            <button class="scope-btn" data-scope="all">All tabs</button>
+        </div>
+        <input id="searchInput" type="search" placeholder="Search errors..." autocomplete="off">
+    </div>
+
+    <div id="errorList" class="error-list"></div>
+    <script src="sound.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>
